@@ -16,7 +16,7 @@ const config = {
 const game = new Phaser.Game(config);
 
 let snake, food, cursors;
-let direction = 'right';
+let direction = { x: 1, y: 0 }; // Replace the string direction with an object
 let snakeGroup;
 let jungleBackground;
 let score = 0;
@@ -26,6 +26,8 @@ let lastMoveTime = 0;
 let gridSize = 20;
 let canMove = true; // Add this line to control movement
 let isPaused = false;
+
+let foodColors = [0xff0000, 0x00ff00, 0x0000ff, 0xffff00, 0xff00ff, 0x00ffff, 0x800000, 0x008000, 0x000080, 0x808000, 0x800080, 0x008080];
 
 function preload() {
     this.load.image('snakeHead', 'assets/snakeHead.png');
@@ -50,7 +52,8 @@ function create() {
     // Render initial snake
     renderSnake.call(this);
 
-    food = this.add.rectangle(0, 0, gridSize - 2, gridSize - 2, 0xff0000);
+    // Replace the existing food creation line with this:
+    food = this.add.rectangle(0, 0, gridSize - 2, gridSize - 2, Phaser.Math.RND.pick(foodColors));
     placeFood.call(this);
 
     cursors = this.input.keyboard.createCursorKeys();
@@ -86,27 +89,23 @@ function create() {
 }
 
 function handleKeyDown(event) {
-    if (isPaused) return;
-    if (!canMove) return;
+    if (isPaused || !canMove) return;
 
     switch (event.code) {
         case 'ArrowLeft':
-            direction = 'left';
-            canMove = false;
+            direction.x = -1;
             break;
         case 'ArrowRight':
-            direction = 'right';
-            canMove = false;
+            direction.x = 1;
             break;
         case 'ArrowUp':
-            direction = 'up';
-            canMove = false;
+            direction.y = -1;
             break;
         case 'ArrowDown':
-            direction = 'down';
-            canMove = false;
+            direction.y = 1;
             break;
     }
+    canMove = false;
 }
 
 function update(time, delta) {
@@ -122,21 +121,14 @@ function update(time, delta) {
 }
 
 function moveSnake() {
-    let x = snake[0].x;
-    let y = snake[0].y;
+    let x = snake[0].x + direction.x * gridSize;
+    let y = snake[0].y + direction.y * gridSize;
 
     // Store the previous direction
     let prevDirection = {
         x: snake[1] ? snake[0].x - snake[1].x : 0,
         y: snake[1] ? snake[0].y - snake[1].y : 0
     };
-
-    switch (direction) {
-        case 'left': x -= gridSize; break;
-        case 'right': x += gridSize; break;
-        case 'up': y -= gridSize; break;
-        case 'down': y += gridSize; break;
-    }
 
     // Check if snake hits the walls
     if (x < 0 || x >= this.scale.width || y < 0 || y >= this.scale.height) {
@@ -145,16 +137,11 @@ function moveSnake() {
     }
 
     // Check for reversal
-    let newDirection = {
-        x: x - snake[0].x,
-        y: y - snake[0].y
-    };
-
-    if (prevDirection.x === -newDirection.x && prevDirection.y === -newDirection.y) {
+    if (prevDirection.x === -direction.x * gridSize && prevDirection.y === -direction.y * gridSize) {
         snake.reverse();
         // Adjust x and y after reversal
-        x = snake[0].x + newDirection.x;
-        y = snake[0].y + newDirection.y;
+        x = snake[0].x + direction.x * gridSize;
+        y = snake[0].y + direction.y * gridSize;
     }
 
     snake.unshift({ x: x, y: y });
@@ -209,8 +196,8 @@ function placeFood() {
         newY = Math.floor(Math.random() * (this.scale.height / gridSize)) * gridSize;
     } while (snake.some(segment => segment.x === newX && segment.y === newY));
 
-    food.x = newX;
-    food.y = newY;
+    food.setPosition(newX + gridSize / 2, newY + gridSize / 2);
+    food.fillColor = Phaser.Math.RND.pick(foodColors);
 }
 
 function togglePause() {
