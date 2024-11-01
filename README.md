@@ -34,6 +34,7 @@ Jungle Snake is a modern take on the classic Snake game. Navigate your snake thr
    cd jungle-snake
    ```
 3. Open `index.html` in a web browser to start the game.
+   in terminal run command  "open -a "Google Chrome" index.html"
 
 ## Development
 

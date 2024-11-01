@@ -186,7 +186,11 @@ function increaseSpeed() {
 }
 
 function resetGame() {
-    gameOver.call(this);
+    score = 0;
+    moveInterval = 150;
+    direction = { x: 1, y: 0 };
+    isPaused = false;
+    this.scene.restart();
 }
 
 function placeFood() {
@@ -226,19 +230,27 @@ function resize(gameSize, baseSize, displaySize, resolution) {
 
 function gameOver() {
     isPaused = true;
-    this.add.text(this.scale.width / 2, this.scale.height / 2, 'GAME OVER', {
+    this.add.text(this.scale.width / 2, this.scale.height / 2, 'Lets Run Again', {
         fontSize: '64px',
         fill: '#fff'
     }).setOrigin(0.5);
     
     // Add a restart button
-    let restartButton = this.add.text(this.scale.width / 2, this.scale.height / 2 + 70, 'Restart', {
+    let restartButton = this.add.text(this.scale.width / 2, this.scale.height / 2 + 70, 'Faster this time -> Score ++', {
         fontSize: '32px',
         fill: '#fff'
     }).setOrigin(0.5).setInteractive();
     
     restartButton.on('pointerdown', () => {
-        isPaused = false;
-        this.scene.restart();
+        resetGame.call(this);
     });
+
+    // Add space bar listener for restart only when game is over
+    let spaceBarListener = (event) => {
+        if (event.code === 'Space') {
+            resetGame.call(this);
+            this.input.keyboard.off('keydown', spaceBarListener);
+        }
+    };
+    this.input.keyboard.on('keydown', spaceBarListener);
 }
